@@ -1,0 +1,41 @@
+name: Extract SurgiTech website files
+
+on:
+  push:
+    paths:
+      - ".github/workflows/extract-site-files.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Extract website into repository root
+        run: |
+          unzip -q Surgical-Robotics-Website-2.zip -d /tmp/surgitech
+          test -f /tmp/surgitech/Surgical-Robotics-Website/index.html
+          cp -R /tmp/surgitech/Surgical-Robotics-Website/. .
+          test -f index.html
+          test -f style.css
+          test -f script.js
+          test -d images
+
+      - name: Commit website files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html style.css script.js README.md images
+          if git diff --cached --quiet; then
+            echo "Website files are already up to date."
+          else
+            git commit -m "Publish SurgiTech website files at repository root"
+            git push
+          fi
